@@ -67,6 +67,11 @@ pub enum UsersCommand {
 		user_id: OwnedUserId,
 	},
 
+	DeleteBackupVersion {
+		user_id: OwnedUserId,
+		version: String,
+	},
+
 	GetBackupAlgorithm {
 		user_id: OwnedUserId,
 		version: String,
@@ -198,6 +203,21 @@ async fn get_latest_backup(&self, user_id: OwnedUserId) -> Result {
 
 	self.write_str(&format!("Query completed in {query_time:?}:\n\n```rs\n{result:#?}\n```"))
 		.await
+}
+
+#[admin_command]
+async fn delete_backup_version(&self, user_id: OwnedUserId, version: String) -> Result {
+	let timer = tokio::time::Instant::now();
+	self.services
+		.key_backups
+		.delete_backup(&user_id, &version)
+		.await;
+	let query_time = timer.elapsed();
+
+	self.write_str(&format!(
+		"Query completed in {query_time:?}:\n\n```Deleted backup {version:?}```"
+	))
+	.await
 }
 
 #[admin_command]
